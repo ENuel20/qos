@@ -9,7 +9,7 @@ use {
     tempfile::NamedTempFile,
 };
 
-pub fn spwan(exit: Arc<AtomicBool>) -> (impl AsRef<Path>, JoinHandle<()>) {
+pub fn spawn(exit: Arc<AtomicBool>) -> (impl AsRef<Path>, JoinHandle<()>) {
     println!("starting agave server side!");
 
     let ipc = NamedTempFile::new().unwrap();
@@ -20,13 +20,13 @@ pub fn spwan(exit: Arc<AtomicBool>) -> (impl AsRef<Path>, JoinHandle<()>) {
         let mut session = server.accept().unwrap();
 
         // Send a tpu_to_pack message.
-        let tpu_to_pack_thd = tpu_to_pack::spwan(
+        let tpu_to_pack_thd = tpu_to_pack::spawn(
             exit.clone(),
             session.tpu_to_pack.allocator,
-            session.tpu_to_pack.queue,
+            session.tpu_to_pack.producer,
         );
         // Send a progress_tracker message
-        let progress_tracker_thd = progress_tracker::spwan(exit.clone(), session.progress_tracker);
+        let progress_tracker_thd = progress_tracker::spawn(exit.clone(), session.progress_tracker);
 
         // Vector to store worker thread handles
         let mut worker_handles: Vec<JoinHandle<()>> = Vec::new();

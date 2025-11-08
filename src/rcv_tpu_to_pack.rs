@@ -26,7 +26,7 @@ pub fn spawn(
             consumer.sync();
             if let Some(slot) = consumer.try_read() {
                 let msg = unsafe {
-                    let message = slot.as_ref();
+                    let message = slot;
                     let ptr = allocator.ptr_from_offset(message.transaction.offset as usize);
                     let data = core::slice::from_raw_parts(
                         ptr.as_ref(),
@@ -67,7 +67,7 @@ fn pack_to_workers_batch(txs: &[Transaction]) -> PackToWorkerReceiver {
         })
         .collect();
     PackToWorkerReceiver {
-        flags: pack_message_flags::RESOLVE,
+        flags: pack_message_flags::EXECUTE,
         max_execution_slot: 32,
         transactions: Arc::new(items),
     }

@@ -150,7 +150,7 @@ fn allocate_and_reserve_message(
 ) -> Option<(NonNull<u8>, NonNull<PackToWorkerMessage>)> {
     let allocated_ptr = allocator.allocate(batch_size as u32)?;
 
-    let Some(pack_to_worker_message) = producer.reserve() else {
+    let Some(pack_to_worker_message) = (unsafe { producer.reserve() }) else {
         unsafe {
             allocator.free(allocated_ptr);
         }
@@ -163,7 +163,7 @@ fn allocate_and_reserve_message(
 unsafe fn copy_transactions_and_populate_message(
     transactions: &[SharableTransactionRegion],
     flags: u16,
-    max_execution_slot: u64,
+    max_working_slot: u64,
     allocated_ptr: NonNull<u8>,
     allocated_ptr_offset_in_allocator: usize,
     pack_to_worker_message: NonNull<PackToWorkerMessage>,
@@ -179,7 +179,7 @@ unsafe fn copy_transactions_and_populate_message(
     unsafe {
         pack_to_worker_message.write(PackToWorkerMessage {
             flags,
-            max_execution_slot,
+            max_working_slot,
             batch: SharableTransactionBatchRegion {
                 num_transactions: num_transactions as u8,
                 transactions_offset: allocated_ptr_offset_in_allocator,

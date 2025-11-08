@@ -18,7 +18,7 @@ pub fn process_transaction_batch(
     let item = consumer.try_read()?;
 
     let batch = unsafe {
-        let message = item.as_ref();
+        let message = item;
         let txs_ptr = allocator.ptr_from_offset(message.batch.transactions_offset as usize);
         let txs = core::slice::from_raw_parts(
             txs_ptr.as_ptr() as *const SharableTransactionRegion,

@@ -5,18 +5,18 @@ edition = "2024"
 
 
 [dependencies]
-solana-runtime = { git = "https://github.com/anza-xyz/agave.git", rev = "60ba168", package = "solana-runtime", features = [
+solana-runtime = { git = "https://github.com/anza-xyz/agave.git", branch = "master", package = "solana-runtime", features = [
   "dev-context-only-utils",
 ] }
-agave-scheduler-bindings = { git = "https://github.com/anza-xyz/agave.git", rev = "60ba168", package = "agave-scheduler-bindings" }
-solana-poh = { git = "https://github.com/anza-xyz/agave.git", rev = "60ba168", package = "solana-poh", features = [
+agave-scheduler-bindings = { git = "https://github.com/anza-xyz/agave.git", branch = "master", package = "agave-scheduler-bindings" }
+solana-poh = { git = "https://github.com/anza-xyz/agave.git", branch = "master", package = "solana-poh", features = [
   "dev-context-only-utils",
 ] }
-solana-cost-model = { git = "https://github.com/anza-xyz/agave.git", rev = "60ba168", package = "solana-cost-model" }
-solana-core = { git = "https://github.com/anza-xyz/agave.git", rev = "60ba168", package = "solana-core" }
-solana-perf = { git = "https://github.com/anza-xyz/agave.git", rev = "60ba168", package = "solana-perf"}
-agave-scheduling-utils = { git = "https://github.com/anza-xyz/agave.git",  rev = "60ba168", package = "agave-scheduling-utils" }
-agave-transaction-view = { git = "https://github.com/anza-xyz/agave.git", rev = "60ba168", package = "agave-transaction-view"}
+solana-cost-model = { git = "https://github.com/anza-xyz/agave.git", branch = "master", package = "solana-cost-model" }
+solana-core = { git = "https://github.com/anza-xyz/agave.git", branch = "master", package = "solana-core" }
+solana-perf = { git = "https://github.com/anza-xyz/agave.git", branch = "master", package = "solana-perf"}
+agave-scheduling-utils = { git = "https://github.com/anza-xyz/agave.git",  branch = "master", package = "agave-scheduling-utils" }
+agave-transaction-view = { git = "https://github.com/anza-xyz/agave.git", branch = "master", package = "agave-transaction-view"}
 solana-sdk = "3.0.0"
 solana-genesis-config = "3.0.0"
 solana-packet = "3.0.0"
@@ -31,8 +31,8 @@ solana-transaction = "3.0.1"
 agave-banking-stage-ingress-types = "3.0.7"
 solana-system-interface = "2.0"
 crossbeam-channel = "0.5.15"
-rts-alloc = "0.2.0"
-shaq = "0.2.0"
+rts-alloc = { version = "1.0.0" }
+shaq = { version = "1.0.0" }
 log = "0.4.28"
 core_affinity = "0.8.3"
 ctrlc = "3.4.6"

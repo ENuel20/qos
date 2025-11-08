@@ -12,7 +12,7 @@ use {
     },
 };
 
-pub fn spwan(exit: Arc<AtomicBool>, mut queue: shaq::Producer<ProgressMessage>) -> JoinHandle<()> {
+pub fn spawn(exit: Arc<AtomicBool>, mut queue: shaq::Producer<ProgressMessage>) -> JoinHandle<()> {
     std::thread::spawn(move || {
         let mut rng = rand::rng();
         while !exit.load(Ordering::Relaxed) {
@@ -36,16 +36,20 @@ fn create_dynamic_mgs(rng: &mut impl Rng) -> Vec<ProgressMessage> {
             let next_leader_slot: u64 = rng.random_range(current_slot..10_001);
             let remaining_cost_units: u64 = rng.random_range(1_000_000..60_000_000);
             let current_slot_progress: u8 = rng.random_range(0..100);
-
+            let leader_state = rng.random_range(0..2);
+            let leader_range_end = rng.random_range(1..10_000);
             ProgressMessage {
                 current_slot,
                 next_leader_slot,
                 remaining_cost_units,
                 current_slot_progress,
+                leader_state,
+                leader_range_end,
             }
         })
         .collect()
 }
+
 
 fn handle_progress_tracker(
     producer: &mut shaq::Producer<ProgressMessage>,
@@ -54,7 +58,7 @@ fn handle_progress_tracker(
     for progress_tracker in progress_tracker_batches.iter() {
         producer.sync();
 
-        let Some(progress_tracker_message) = producer.reserve() else {
+        let Some(progress_tracker_message) = (unsafe { producer.reserve() }) else {
             continue;
         };
 
@@ -64,6 +68,8 @@ fn handle_progress_tracker(
                 next_leader_slot: progress_tracker.next_leader_slot,
                 remaining_cost_units: progress_tracker.remaining_cost_units,
                 current_slot_progress: progress_tracker.current_slot_progress,
+                leader_state: progress_tracker.leader_state,
+                leader_range_end: progress_tracker.leader_range_end,
             });
         }
         producer.commit();

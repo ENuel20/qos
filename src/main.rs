@@ -67,7 +67,7 @@ fn main() {
     })
     .unwrap();
 
-    let (ipc, server_handle) = agave::server::spwan(exit.clone());
+    let (ipc, server_handle) = agave::server::spawn(exit.clone());
 
     let session = connect(
         ipc,
@@ -75,10 +75,11 @@ fn main() {
             worker_count: 4,
             allocator_size: 1024 * 1024 * 1024,
             allocator_handles: 3,
-            tpu_to_pack_size: 65536 * 1024,
-            progress_tracker_size: 16 * 1024,
-            pack_to_worker_size: 1024 * 1024,
-            worker_to_pack_size: 1024 * 1024,
+            tpu_to_pack_capacity: 65536 * 1024,
+            progress_tracker_capacity: 16 * 1024,
+            pack_to_worker_capacity: 1024 * 1024,
+            worker_to_pack_capacity: 1024 * 1024,
+            flags: Default::default(),
         },
         Duration::from_secs(1),
     )

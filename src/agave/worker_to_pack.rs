@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use agave_scheduler_bindings::{
-    SharableTransactionBatchRegion, TransactionResponseRegion, WorkerToPackMessage,
+    SharableTransactionBatchRegion, TransactionResponseRegion, WorkerToPackMessage, processed_codes::{self, PROCESSED},
 };
 
 use crate::agave::SLEEP_WORKER_TO_PACK;
@@ -9,19 +9,19 @@ use crate::agave::SLEEP_WORKER_TO_PACK;
 pub fn send_message(
     producer: &mut shaq::Producer<WorkerToPackMessage>,
     batch: SharableTransactionBatchRegion,
-    processed: u8,
+    processed_code: u8,
     responses: TransactionResponseRegion,
 ) -> bool {
     producer.sync();
 
-    let Some(slot) = producer.reserve() else {
+    let Some(slot) = (unsafe { producer.reserve() })else {
         return false;
     };
 
     unsafe {
         slot.write(WorkerToPackMessage {
             batch,
-            processed,
+            processed_code,
             responses,
         });
     }

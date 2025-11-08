@@ -18,8 +18,7 @@ pub fn spawn(
             consumer.sync();
             if let Some(slot) = consumer.try_read() {
                 let msg = unsafe {
-                    let message = slot.as_ref();
-                    message
+                    &*slot
                 };
 
                 println!(

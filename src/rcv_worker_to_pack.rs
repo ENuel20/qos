@@ -23,7 +23,7 @@ pub fn spwan(
                 consumer.sync();
                 if let Some(slot) = consumer.try_read() {
                     let msg = unsafe {
-                        let message = slot.as_ref();
+                        let message = slot;
                         message
                     };
 
@@ -35,7 +35,7 @@ pub fn spwan(
                             responses.tag {}
                             responses.num_transaction_responses {}
                             responses.transaction_responses_offset {}",
-                        msg.processed,
+                        msg.processed_code,
                         msg.batch.num_transactions,
                         msg.batch.transactions_offset,
                         msg.responses.tag,
