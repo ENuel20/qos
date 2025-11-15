@@ -1,5 +1,15 @@
 {
-    "dependi.rust.lockFileEnabled": true,
-    "editor.mouseWheelZoom": true,
-    "editor.formatOnPaste": true
+  "files.watcherExclude": {
+    "**/target/**": true,
+    "**/.git/**": true,
+    "**/node_modules/**": true
+  },
+  "[rust]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
+  },
+  "rust-analyzer.checkOnSave": true,
+  "rust-analyzer.inlayHints.bindingModeHints.enable": false,
+  "rust-analyzer.inlayHints.closingBraceHints.minLines": 10,
+  "editor.rulers": [100, 120]
 }
