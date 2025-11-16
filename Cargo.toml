@@ -1,10 +1,10 @@
 [package]
-name = "sb"
+name = "qos"
 version = "0.1.0"
 edition = "2024"
 
 [[bin]]
-name = "sb"
+name = "qos"
 path = "src/ex_sheduler/main.rs"
 
 [dependencies]
