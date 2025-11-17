@@ -11,7 +11,7 @@ pub mod handle_worker_messages;
 pub mod utils;
 
 // Re-export public types and functions
-pub use schedule::schedule;
+pub use schedule::{GreedyScheduler, GreedyQueues};
 pub use transaction_entry::{TransactionEntry, clear_queue};
 pub use handle_progress_message::handle_progress_message;
 pub use handle_tpu_message::handle_tpu_messages;
