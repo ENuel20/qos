@@ -3,15 +3,17 @@
 /// This module provides a complete external scheduler implementation that integrates with Agave
 /// for transaction processing and scheduling.
 
-pub mod schedule;
+pub mod greedy;
 pub mod transaction_entry;
+pub mod legacy;
 pub mod handle_progress_message;
 pub mod handle_tpu_message;
 pub mod handle_worker_messages;
 pub mod utils;
 
 // Re-export public types and functions
-pub use schedule::{GreedyScheduler, GreedyQueues};
+pub use greedy::{GreedyScheduler, GreedyQueues};
+pub use legacy::schedule as legacy_schedule;
 pub use transaction_entry::{TransactionEntry, clear_queue};
 pub use handle_progress_message::handle_progress_message;
 pub use handle_tpu_message::handle_tpu_messages;

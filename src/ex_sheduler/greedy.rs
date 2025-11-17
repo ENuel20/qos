@@ -556,8 +556,4 @@ impl Ord for PriorityId {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    // Keep original tests from the greedy scheduler file if present
-    // (omitted here for brevity in integration patch).
-}
+

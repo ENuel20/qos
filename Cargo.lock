@@ -4769,6 +4769,44 @@ dependencies = [
 ]
 
 [[package]]
+name = "qos"
+version = "0.1.0"
+dependencies = [
+ "agave-banking-stage-ingress-types 3.0.10",
+ "agave-scheduler-bindings",
+ "agave-scheduling-utils",
+ "agave-transaction-view",
+ "bincode 2.0.1",
+ "clap 4.5.51",
+ "core_affinity 0.8.3",
+ "crossbeam-channel",
+ "ctrlc",
+ "log",
+ "rand 0.9.2",
+ "rts-alloc",
+ "shaq",
+ "signal-hook",
+ "solana-compute-budget-interface",
+ "solana-core",
+ "solana-cost-model",
+ "solana-fee-calculator",
+ "solana-genesis-config",
+ "solana-keypair",
+ "solana-message",
+ "solana-packet",
+ "solana-perf 4.0.0-alpha.0",
+ "solana-pubkey 3.0.0",
+ "solana-runtime",
+ "solana-sdk",
+ "solana-signer",
+ "solana-system-interface",
+ "solana-system-transaction",
+ "solana-transaction",
+ "tempfile",
+ "thiserror 2.0.17",
+]
+
+[[package]]
 name = "qstring"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5439,44 +5477,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
 dependencies = [
  "winapi-util",
-]
-
-[[package]]
-name = "sb"
-version = "0.1.0"
-dependencies = [
- "agave-banking-stage-ingress-types 3.0.10",
- "agave-scheduler-bindings",
- "agave-scheduling-utils",
- "agave-transaction-view",
- "bincode 2.0.1",
- "clap 4.5.51",
- "core_affinity 0.8.3",
- "crossbeam-channel",
- "ctrlc",
- "log",
- "rand 0.9.2",
- "rts-alloc",
- "shaq",
- "signal-hook",
- "solana-compute-budget-interface",
- "solana-core",
- "solana-cost-model",
- "solana-fee-calculator",
- "solana-genesis-config",
- "solana-keypair",
- "solana-message",
- "solana-packet",
- "solana-perf 4.0.0-alpha.0",
- "solana-pubkey 3.0.0",
- "solana-runtime",
- "solana-sdk",
- "solana-signer",
- "solana-system-interface",
- "solana-system-transaction",
- "solana-transaction",
- "tempfile",
- "thiserror 2.0.17",
 ]
 
 [[package]]
