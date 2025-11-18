@@ -4791,6 +4791,7 @@ dependencies = [
  "solana-cost-model",
  "solana-fee-calculator",
  "solana-genesis-config",
+ "solana-hash 3.0.0",
  "solana-keypair",
  "solana-message",
  "solana-packet",
