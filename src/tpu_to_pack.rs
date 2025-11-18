@@ -28,7 +28,6 @@ use {
 };
 
 /// Custom delay in milliseconds between produced batches.
-/// You choose this, not SLEEP_TPU_TO_PACK.
 const CUSTOM_SLEEP_MS: u64 = 3;   // <--- YOU CAN MODIFY THIS ANYTIME
 
 /// Spawn the Agave TPU→Pack producer.
