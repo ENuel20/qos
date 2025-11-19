@@ -56,10 +56,13 @@ fn main() {
     let mut in_progress = vec![0; session.workers.len()];
     let mut offset_to_entry = HashMap::with_capacity(QUEUE_CAPACITY);
 
+    let is_leader_atomic = Arc::new(AtomicBool::new(false));
+
     // Spawn a progress thread
     let _progress_handle = spawn_progress_thread(
         exit.clone(),
         session.progress_tracker.clone(),
+        is_leader_atomic.clone(),
     );
 
     let mut is_leader = false;
@@ -89,12 +92,8 @@ fn main() {
 
         // Handle progress messages
         let mut should_clear = false;
-        if let Some((new_is_leader, slots_until_leader)) =
-            handle_progress_message(&mut session.progress_tracker)
-        {
-            is_leader = new_is_leader;
-            should_clear = slots_until_leader > SLOT_DISTANCE_THRESHOLD;
-        }
+        let is_leader = is_leader_atomic.load(Ordering::Relaxed);
+        let should_clear = !is_leader;
 
         // Schedule transactions or clear queue
         if is_leader {
