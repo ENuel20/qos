@@ -19,6 +19,7 @@ use shaq::Producer; // This is the queue type used in scheduler bindings
 pub fn spawn_progress_thread(
     exit: Arc<AtomicBool>,
     mut producer: Producer<ProgressMessage>,
+    is_leader_ref: Arc<AtomicBool>
 ) -> thread::JoinHandle<()> {
     thread::Builder::new()
         .name("AgaveProgressThread".into())
@@ -50,6 +51,7 @@ pub fn spawn_progress_thread(
 
                 // Progress through slot (0–100%)
                 let slot_progress = ((current_slot % 10) as u8) * 10;
+                is_leader_ref.store(is_leader_now, Ordering::Relaxed);
 
                 let msg = ProgressMessage {
                     leader_state: if is_leader_now { IS_LEADER } else { IS_NOT_LEADER },
