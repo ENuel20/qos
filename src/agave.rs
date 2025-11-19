@@ -65,8 +65,6 @@ fn main() {
         is_leader_atomic.clone(),
     );
 
-    let mut is_leader = false;
-
     while !exit.load(Ordering::Relaxed) {
         // Handle TPU → Pack messages
         handle_tpu_messages(
