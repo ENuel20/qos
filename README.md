@@ -1,3 +1,6 @@
+<img width="2988" height="1771" alt="Screenshot 2025-11-21 044233" src="https://github.com/user-attachments/assets/75fdf1f0-b5d2-4bdf-a29e-0bdaf1c0e68c" />
+
+
 # QOS — Greedy Multi-Client Priority Lane Scheduler
 
 **Programmable Blockspace for Solana**  
