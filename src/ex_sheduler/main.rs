@@ -1,5 +1,6 @@
 mod greedy;
 mod transaction_entry;
+mod transaction_map;
 mod handle_progress_message;
 mod handle_tpu_message;
 mod handle_worker_messages;
@@ -138,7 +139,7 @@ fn main() {
                 }
 
                 if is_leader {
-                    crate::ex_sheduler::legacy::schedule(
+                    crate::legacy::schedule(
                         allocator,
                         &mut workers[..NUM_WORKERS - 1],
                         &mut queue,

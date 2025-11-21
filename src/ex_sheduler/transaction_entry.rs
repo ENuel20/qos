@@ -8,9 +8,9 @@ use std::collections::{HashMap, VecDeque};
 use super::utils::PubkeysPtr;
 
 pub struct TransactionEntry {
-    sharable_transaction: SharableTransactionRegion,
-    view: SanitizedTransactionView<TransactionPtr>,
-    loaded_addresses: Option<PubkeysPtr>,
+    pub sharable_transaction: SharableTransactionRegion,
+    pub view: SanitizedTransactionView<TransactionPtr>,
+    pub loaded_addresses: Option<PubkeysPtr>,
 }
 
 impl TransactionEntry {

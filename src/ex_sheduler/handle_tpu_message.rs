@@ -1,7 +1,9 @@
 use agave_scheduler_bindings::{
     MAX_TRANSACTIONS_PER_MESSAGE, TpuToPackMessage, SharableTransactionRegion,
-    pack_message_flags, check_flags,
+    SharableTransactionBatchRegion, PackToWorkerMessage,
+    pack_message_flags,
 };
+use agave_scheduler_bindings::pack_message_flags::check_flags;
 use agave_scheduling_utils::handshake::client::ClientWorkerSession;
 use agave_scheduling_utils::transaction_ptr::TransactionPtr;
 use agave_transaction_view::transaction_version::TransactionVersion;
@@ -11,7 +13,8 @@ use shaq::Consumer;
 use std::collections::{HashMap, VecDeque};
 
 use super::transaction_entry::TransactionEntry;
-use super::utils::PubkeysPtr;
+
+const QUEUE_CAPACITY: usize = 100_000;
 
 pub fn handle_tpu_messages(
     allocator: &Allocator,

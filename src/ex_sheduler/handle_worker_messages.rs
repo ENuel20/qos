@@ -162,12 +162,12 @@ pub fn handle_worker_messages(
                         continue;
                     }
 
-                    let offset = unsafe { tx_ptr.to_sharable_transaction_region(allocator) }.offset;
+                    let offset = unsafe { (*tx_ptr).to_sharable_transaction_region(allocator) }.offset;
                     let entry = TransactionEntry {
                         sharable_transaction: unsafe {
                             tx_ptr.to_sharable_transaction_region(allocator)
                         },
-                        view: SanitizedTransactionView::try_new_sanitized(tx_ptr, true)
+                        view: SanitizedTransactionView::try_new_sanitized(tx_ptr, false)
                             .expect("message corrupted"),
                         loaded_addresses,
                     };

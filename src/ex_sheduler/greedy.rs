@@ -2,9 +2,7 @@
 // This scheduler consumes the Agave client session directly and schedules TXs by
 // a greedy priority-based policy.
 
-#[macro_use]
-extern crate static_assertions;
-
+use static_assertions::const_assert;
 use crate::transaction_map::{TransactionMap, TransactionStateKey};
 use agave_feature_set::FeatureSet;
 use agave_scheduler_bindings::pack_message_flags::check_flags;
@@ -34,8 +32,6 @@ use solana_pubkey::Pubkey;
 use solana_runtime_transaction::runtime_transaction::RuntimeTransaction;
 use solana_svm_transaction::svm_message::SVMStaticMessage;
 use solana_transaction::sanitized::MessageHash;
-
-use crate::transaction_map::{TransactionMap as TxMap, TransactionStateKey as TxStateKey};
 
 const UNCHECKED_CAPACITY: usize = 64 * 1024;
 const CHECKED_CAPACITY: usize = 64 * 1024;
@@ -227,7 +223,7 @@ impl GreedyScheduler {
                             .map(|id| (id, self.state[id.key].shared))
                     }),
                 })
-                .unwrap();
+                .expect("failed to write check message to worker");
         }
 
         worker.pack_to_worker.commit();
@@ -336,7 +332,7 @@ impl GreedyScheduler {
         };
         assert_eq!(batch.len(), responses.len());
 
-        for ((_, id), rep) in batch.iter().zip(responses.iter().copied()) {
+        for ((_, id), rep) in batch.iter().zip(responses.iter()) {
             let parsing_failed =
                 rep.parsing_and_sanitization_flags == parsing_and_sanitization_flags::FAILED;
             let status_failed = rep.status_check_flags
@@ -387,8 +383,8 @@ impl GreedyScheduler {
         }
 
         // Free both containers.
-        batch.free();
-        responses.free();
+        unsafe { batch.free() };
+        unsafe { responses.free(&self.allocator) };
     }
 
     fn on_execute(&mut self, msg: &WorkerToPackMessage) {
@@ -410,7 +406,7 @@ impl GreedyScheduler {
         }
 
         // Free the containers.
-        batch.free();
+        unsafe { batch.free() };
         // SAFETY:
         // - Trust Agave to have allocated these responses properly.
         unsafe {
@@ -481,12 +477,7 @@ impl GreedyScheduler {
             true,
         )
         .ok()?;
-        let tx = RuntimeTransaction::<TransactionView<true, TransactionPtr>>::try_from(
-            tx,
-            MessageHash::Compute,
-            None,
-        )
-        .ok()?;
+        let tx = RuntimeTransaction::try_from(tx, &runtime.feature_set, MessageHash::Sha256).ok()?;
 
         // Compute transaction cost.
         let compute_budget_limits =

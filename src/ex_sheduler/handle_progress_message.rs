@@ -1,6 +1,4 @@
-use agave_scheduler_bindings::{
-    ProgressMessage, IS_LEADER,
-};
+use agave_scheduler_bindings::ProgressMessage;
 use shaq::Consumer;
 
 pub fn handle_progress_message(
