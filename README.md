@@ -1,226 +1,164 @@
 #qos
 
-The agave-scheduler-bindings is a modular extension to attach to the Agave validator client on the Solana blockchain. It allows validators to customize block packing logic in a transparent and secure way, without modifying the main Agave source code<img 
- QOS Scheduler – Greedy Multi-Client Priority Lane Scheduler
+The agave-scheduler-bindings is a modular extension to attach to the Agave validator client on the Solana blockchain. It allows validators to customize block packing logic in a transparent and secure way, without modifying the main Agave source code
+<img width="2988" height="1771" alt="Screenshot 2025-11-21 044233" src="https://github.com/user-attachments/assets/fba068ed-58fb-4f69-ae1f-e24b625a10a3" />
 
 
-🔷 QOS — Greedy Multi-Client Priority Lane Scheduler
+# QOS — Greedy Multi-Client Priority Lane Scheduler
 
-Programmable Blockspace for Solana
-A modular extension built on top of agave-scheduler-bindings, enabling validators to customize block packing logic — without modifying Agave itself.
+**Programmable Blockspace for Solana**  
+Built on Agave’s shared-memory execution pipeline.
 
-🚀 Overview
+---
 
-QOS is a multi-client, multi-lane external scheduler designed for Solana’s shared-memory execution pipeline.
+## Overview
 
-It introduces programmable blockspace, allowing:
+**QOS** is a multi-client, multi-lane external scheduler for Solana. It introduces **programmable blockspace**, allowing wallets, enterprise apps, MEV searchers, and system-level flows to compete fairly inside isolated lanes.
 
-Wallets
+It attaches as a modular extension to the **agave-scheduler-bindings**, without touching validator source code.
 
-Enterprise apps
+QOS proves that Solana can support an Ethereum-style proposal-builder layer — with no performance penalty — because shared memory + zero-copy IPC makes it fast enough to matter.
 
-MEV searchers
+---
 
-Games
+## Architecture at a Glance
 
-System operations
+QOS is built from four primitives:
 
-…to compete fairly inside isolated lanes, each with deterministic ordering and global priority.
+1.  **Client-local FIFO queues**
+    Each client maintains strict intra-client ordering.
 
-Core idea:
-Clients get local fairness.
-The network gets greedy global prioritization.
-Solana keeps microsecond-level speed.
+2.  **Global min-max heaps (only queue heads)**
+    The scheduler tracks only the *head transaction* of each client — the minimum state required to prioritize globally.
 
-🧱 Architecture at a Glance
+3.  **Shared memory regions (SHAQ) + RTS-Alloc arena**
+    All transactions live in a preallocated, zero-copy arena. Written once by TPU → referenced by external scheduler → consumed by BankingStage.
 
-QOS stands on four core primitives:
+4.  **Unix Domain Socket handshake**
+    A lightweight, pointer-only handshake between validator and external scheduler. No copying. No serialization.
 
-1️⃣ Client-Local FIFO Queues
+**Result:** External scheduling adds **microseconds**, not milliseconds.
 
-Each client maintains strict internal ordering.
+---
 
-Only the head of each queue is considered for prioritization.
+## Design Goals
 
-2️⃣ Global Min-Max Heaps (Heads Only)
+### Deterministic Per-Client Ordering
+Clients always pop from their own local FIFO queue. No cross-client reordering ensures predictable transaction sequencing for individual senders.
 
-A min-max heap holds only queue heads, not full transactions.
+### Greedy Global Prioritization
+Across all clients inside a lane, QOS always chooses the **highest fee/CU head**.
+If a low-priority client occupies a slot, QOS evicts it via `pop_min` and immediately replaces it with a better head.
 
-Supports pop_max() for best priority and pop_min() for greedy eviction.
+### Efficient Multi-Lane Isolation
+Each lane maintains two heaps:
+*   **Unchecked heap**: For incoming transactions waiting to be verified.
+*   **Checked heap**: For verified transactions ready for execution.
 
-3️⃣ Shared Memory Regions (SHAQ) + RTS-Alloc
+Both are min-max heaps holding only queue heads.
+**Priority** = `fee_per_CU`.
 
-All transactions live in a zero-copy arena.
+### Fast & Zero-Copy
+QOS uses the same components as Agave:
+*   **SHAQ** for shared memory
+*   **RTS-Alloc** for allocator-free arenas
+*   **Zero-copy transaction passing**
+*   **Unix Domain Sockets** for pointer exchange
 
-Written once → referenced by everyone → never copied.
+No bytes move. Only pointers move.
 
-Designed for the Agave execution pipeline.
+---
 
-4️⃣ Unix Domain Socket Handshake
+## Scheduling Model
 
-Scheduler and validator exchange pointers, not data.
+### Stage 1 — Client Ingress
+*   Client pushes transactions into its **local FIFO queue**.
+*   Only the queue head is tracked globally.
+*   Ingress order determines *per-client* ordering, not *global* ordering.
 
-Zero serialization. Zero copying. Microsecond overhead.
+### Stage 2 — Unchecked Priority Heap
+*   For each client, QOS inserts the head into a **min-max heap**.
+*   `pop_max()` yields the global best transaction.
+*   After popping, the client’s next head is pushed back (`push_back`).
+*   If the heap is at capacity, QOS performs:
+    ```rust
+    pop_min()  // evict lowest-priority client head
+    push(new_client_head)
+    ```
+    This is the greedy behavior.
 
-🎯 Design Goals
-✔️ Deterministic Per-Client Ordering
+### Stage 3 — Checked Heap
+*   Same structure, but only validated transactions go here.
+*   QOS pulls from this heap when constructing block batches.
+*   The greedy nature persists → highest priority always wins.
 
-FIFO per client.
-No cross-client reordering.
-Every client gets guaranteed sequencing.
+---
 
-✔️ Greedy Global Prioritization
+## Lane Isolation
 
-Across all clients, QOS always picks the highest fee/CU head.
+Each lane operates the full pipeline independently:
+*   **High-Value Lane**
+*   **Normal Lane**
+*   **MEV Lane**
+*   **TPU Lane** (validator-native)
 
-Low-priority clients are aggressively evicted:
+Per lane features:
+*   FIFO queues per client
+*   Unchecked min-max heap
+*   Checked min-max heap
+*   CU budgets & weights
+*   Entry constraints (bundles, atomic groups, sequencing)
 
-pop_min()   # remove lowest priority client head
-push(new_head)
+Weighted lane selection gives each lane deterministic blockspace share.
 
+---
 
-This is pure greedy scheduling.
+## Compatibility
 
-✔️ Efficient Lane Isolation
+QOS is fully compatible with the Agave validator:
+*   Same shared-memory regions
+*   Same RTS-Alloc arena
+*   Same zero-copy batching
+*   Same handshake protocol
+*   No changes to BankingStage or core runtime
 
-Each lane maintains:
+It slides between the **network ingress** and the **greedy scheduler**, and consumes the same shared memory transactions.
 
-client FIFO queues
+---
 
-unchecked min-max heap
+## Why It Works
 
-checked min-max heap
+Solana’s shared-memory pipeline makes proposal-builder systems fast:
+*   No mempools
+*   No gossip serialization
+*   No copying
+*   No redundant hashing
+*   No syscalls
 
-deterministic pushback
+Other chains pay **milliseconds** for IPC. Solana pays **microseconds**.
+This single architectural fact makes QOS **practical, safe, and production-feasible**.
 
-lane CU budgets
+---
 
-lane weights
+## Status
 
-Lanes operate independently with their own traffic and policies.
+**Research → Prototype → Agave-ready module.**
 
-⚙️ Three-Stage Scheduling Pipeline
-🔹 Stage 1 — Client Ingress
+Current focus:
+*   Benchmarks for lane switching
+*   Heap saturation stress tests
+*   Checked-heap cross-lane fairness validation
+*   End-to-end BankingStage integration
 
-Clients push transactions into their local FIFO queue.
+---
 
-Only the queue head enters global structures.
+## Build
 
-Arrival order applies only within the client.
+To build the project, ensure you have Rust installed and run:
 
-🔹 Stage 2 — Unchecked Heap (Pre-Validation)
+```bash
+cargo build --release
+```
 
-The head of each client queue goes to a min-max heap.
-
-Scheduler pulls the best via:
-
-pop_max()
-
-
-After consumption, the client’s next head is inserted:
-
-push_back(next_tx)
-
-
-When saturated:
-
-pop_min()   # evict lowest-priority head
-push(new_head)
-
-
-Aggressive, greedy, fast.
-
-🔹 Stage 3 — Checked Heap (Post-Validation)
-
-Same mechanism as unchecked.
-
-Contains only validated transactions.
-
-Used to build final batches for BankingStage.
-
-🛣️ Lane Isolation & Blockspace Shaping
-
-Configurable example:
-
-Lane	Purpose	Share
-High-Value	enterprise, payments	50%
-Normal	wallets, games	40%
-MEV	searchers, experiments	10%
-TPU Lane	validator-native	separate path
-
-Each lane performs:
-
-Independent priority selection
-
-Deterministic ordering
-
-Atomic group / bundle enforcement
-
-CU budgeting
-
-Weighted contributions to each block
-
-⚡ Why This Works on Solana
-
-Most chains cannot support external builders without huge latency.
-Solana can — because of:
-
-🔸 SHAQ Shared Memory
-
-Transaction bytes never move.
-
-🔸 RTS-Alloc Arena
-
-High-performance bump allocator for TPU → scheduler → workers.
-
-🔸 Unix Domain Sockets
-
-Pointer-only handshake.
-
-🔸 Zero-Copy Everywhere
-
-No mempool gossip → no serialization → no hashing → microsecond cost.
-
-This is why Solana can support a proposal-builder layer —
-and do it without slowing down.
-
-🔧 Compatibility
-
-QOS integrates directly into Agave’s external scheduling path:
-
-same shared-memory regions
-
-same arena allocator
-
-same handshake protocol
-
-same greedy scheduler interface
-
-same BankingStage expectations
-
-No validator changes required.
-
-📈 Current Status
-
-Prototype stage, built to be:
-
-Clean
-
-Modular
-
-Fast
-
-Agave-compatible
-
-Zero-copy from end to end
-
-Roadmap:
-
-Lane-level benchmarks
-
-Heap saturation tests
-
-Cross-lane fairness validation
-
-End-to-end BankingStage packing                                                                                                                                                                                                                                                      
-                                                                                                                                                                                                                   width="3000" height="2000" alt="image" src="https://github.com/user-attachments/assets/6f43dde5-5d98-4800-971b-559e686c1e7b" />
+                                                                                                                                                                                                                                                    
+                                                                                                                                                                              
